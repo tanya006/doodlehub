@@ -40,20 +40,20 @@ This project is built as a major project for college and demonstrates realtime c
 
 ## Folder Structure
 
-project-root/
-├── my-app/ # React frontend
-│ ├── src/
-│ ├── public/
-│ ├── package-lock.json
-│ └── package.json
-│
-├── server/ # Node.js + Socket.IO backend
-│ ├── index.js
-│ ├── package-lock.json
-│ └── package.json
-│
-├── .gitignore
-└── README.md
+project-root/  
+├── my-app/ # React frontend  
+│ ├── src/  
+│ ├── public/  
+│ ├── package-lock.json  
+│ └── package.json  
+│  
+├── server/ # Node.js + Socket.IO backend  
+│ ├── index.js  
+│ ├── package-lock.json  
+│ └── package.json  
+│  
+├── .gitignore  
+└── README.md  
 
 ## How It Works
 
@@ -79,7 +79,7 @@ npm install
 npm start
 ```
 
-Frontend: http://localhost:3000
+Frontend: http://localhost:3000  
 Backend: http://localhost:3003
 
 ## Future Enhancements
@@ -94,6 +94,6 @@ Backend: http://localhost:3003
 
 ## Project status
 
-DoodleHub is currently in active development.
-Core realtime drawing and syncing are implemented locally.
+DoodleHub is currently in active development.  
+Core realtime drawing and syncing are implemented locally.  
 Upcoming goals include room support, UI polish, and advanced drawing tools.
