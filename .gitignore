@@ -1,0 +1,18 @@
+# Ignore dependency folders
+my-app/node_modules/
+server/node_modules/
+
+# Ignore React build folder
+my-app/build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+
+# Environment files
+.env
+.env.*
