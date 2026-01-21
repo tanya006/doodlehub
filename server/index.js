@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const app = express();
 const http = require("http");
@@ -45,8 +46,10 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello server is working");
+app.use(express.static(path.join(__dirname, "../my-app/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../my-app/build/index.html"));
 });
 
 const PORT = process.env.PORT || 3003;
