@@ -1,13 +1,15 @@
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import rectangleIcon from "../resources/icons/rectangle.svg";
 import lineIcon from "../resources/icons/line.svg";
 import rubberIcon from "../resources/icons/rubber.svg";
 import pencilIcon from "../resources/icons/pencil.svg";
 import textIcon from "../resources/icons/text.svg";
 import selectionIcon from "../resources/icons/selection.svg";
+
 import { toolTypes } from "../constants";
-import { useDispatch, useSelector } from "react-redux";
-import { setElements, setToolType } from "./whiteboardSlice";
+import { setElements, setToolType, setColor, setSize } from "./whiteboardSlice";
 import { emitClearWhiteboard } from "../socketConn/socketConn";
 
 const IconButton = ({ src, type, isRubber }) => {
@@ -43,6 +45,8 @@ const IconButton = ({ src, type, isRubber }) => {
 };
 
 const Menu = () => {
+  const dispatch = useDispatch();
+
   return (
     <div className="menu_container">
       <IconButton src={rectangleIcon} type={toolTypes.RECTANGLE} />
@@ -51,6 +55,36 @@ const Menu = () => {
       <IconButton src={pencilIcon} type={toolTypes.PENCIL} />
       <IconButton src={textIcon} type={toolTypes.TEXT} />
       <IconButton src={selectionIcon} type={toolTypes.SELECTION} />
+
+      {/* COLOR PICKER */}
+      <div style={{ display: "flex", gap: "6px", marginLeft: "10px" }}>
+        {["#000000", "#EF4444", "#22C55E", "#3B82F6", "#A855F7", "#F59E0B"].map(
+          (c) => (
+            <button
+              key={c}
+              onClick={() => dispatch(setColor(c))}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: c,
+                border: "2px solid #3A3A3A",
+                cursor: "pointer",
+              }}
+            />
+          ),
+        )}
+      </div>
+
+      {/* PEN SIZE */}
+      <input
+        type="range"
+        min={1}
+        max={8}
+        defaultValue={2}
+        onChange={(e) => dispatch(setSize(+e.target.value))}
+        style={{ marginLeft: "10px" }}
+      />
     </div>
   );
 };

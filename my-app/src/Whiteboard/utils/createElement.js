@@ -3,48 +3,99 @@ import rough from "roughjs/bundled/rough.esm";
 
 const generator = rough.generator();
 
-const generateRectangle = ({ x1, y1, x2, y2 }) => {
-  return generator.rectangle(x1, y1, x2 - x1, y2 - y1);
+const generateRectangle = ({ x1, y1, x2, y2, stroke, strokeWidth }) => {
+  return generator.rectangle(x1, y1, x2 - x1, y2 - y1, {
+    stroke,
+    strokeWidth,
+  });
 };
 
-const generateLine = ({ x1, y1, x2, y2 }) => {
-  return generator.line(x1, y1, x2, y2);
+const generateLine = ({ x1, y1, x2, y2, stroke, strokeWidth }) => {
+  return generator.line(x1, y1, x2, y2, {
+    stroke,
+    strokeWidth,
+  });
 };
 
-export const createElement = ({ x1, y1, x2, y2, toolType, id, text }) => {
+export const createElement = ({
+  x1,
+  y1,
+  x2,
+  y2,
+  toolType,
+  id,
+  text,
+  stroke,
+  strokeWidth,
+}) => {
   let roughElement;
 
   switch (toolType) {
     case toolTypes.RECTANGLE:
-      roughElement = generateRectangle({ x1, y1, x2, y2 });
-      return {
-        id: id,
-        roughElement,
-        type: toolType,
+      roughElement = generateRectangle({
         x1,
         y1,
         x2,
         y2,
+        stroke,
+        strokeWidth,
+      });
+
+      return {
+        id,
+        type: toolType,
+        roughElement,
+        x1,
+        y1,
+        x2,
+        y2,
+        stroke,
+        strokeWidth,
       };
+
     case toolTypes.LINE:
-      roughElement = generateLine({ x1, x2, y1, y2 });
-      return {
-        id: id,
-        roughElement,
-        type: toolType,
+      roughElement = generateLine({
         x1,
         y1,
         x2,
         y2,
+        stroke,
+        strokeWidth,
+      });
+
+      return {
+        id,
+        type: toolType,
+        roughElement,
+        x1,
+        y1,
+        x2,
+        y2,
+        stroke,
+        strokeWidth,
       };
+
     case toolTypes.PENCIL:
       return {
         id,
         type: toolType,
         points: [{ x: x1, y: y1 }],
+        stroke,
+        strokeWidth,
       };
+
     case toolTypes.TEXT:
-      return { id, type: toolType, x1, y1, x2, y2, text: text || "" };
+      return {
+        id,
+        type: toolType,
+        x1,
+        y1,
+        x2,
+        y2,
+        text: text || "",
+        stroke,
+      };
+
     default:
       throw new Error("Something went wrong when creating element");
   }

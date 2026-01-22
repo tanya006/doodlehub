@@ -40,6 +40,9 @@ const Whiteboard = () => {
   const toolType = useSelector((state) => state.whiteboard.tool);
   const elements = useSelector((state) => state.whiteboard.elements);
 
+  const color = useSelector((state) => state.whiteboard.color);
+  const size = useSelector((state) => state.whiteboard.size);
+
   const [action, setAction] = useState(null);
   const [selectedElement, setSelectedElement] = useState(null);
 
@@ -99,6 +102,8 @@ const Whiteboard = () => {
           y2: clientY,
           toolType,
           id: uuid(),
+          stroke: color,
+          strokeWidth: size,
         });
 
         setAction(actions.DRAWING);
@@ -115,6 +120,8 @@ const Whiteboard = () => {
           y2: clientY,
           toolType,
           id: uuid(),
+          stroke: color,
+          strokeWidth: size,
         });
 
         setAction(actions.WRITING);

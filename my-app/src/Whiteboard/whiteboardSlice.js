@@ -1,8 +1,11 @@
+import { toolTypes } from "../constants";
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  tool: null,
+  tool: toolTypes.PENCIL,
   elements: [],
+  color: "#000000",
+  size: 2,
 };
 
 const whiteboardSlice = createSlice({
@@ -11,6 +14,12 @@ const whiteboardSlice = createSlice({
   reducers: {
     setToolType: (state, action) => {
       state.tool = action.payload;
+    },
+    setColor(state, action) {
+      state.color = action.payload;
+    },
+    setSize(state, action) {
+      state.size = action.payload;
     },
     updateElement: (state, action) => {
       const { id } = action.payload;
@@ -32,7 +41,7 @@ const whiteboardSlice = createSlice({
   },
 });
 
-export const { setToolType, updateElement, setElements } =
+export const { setToolType, updateElement, setElements, setColor, setSize } =
   whiteboardSlice.actions;
 
 export default whiteboardSlice.reducer;
