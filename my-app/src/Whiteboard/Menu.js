@@ -32,7 +32,12 @@ const IconButton = ({ src, type, isRubber }) => {
         selectedToolType === type ? "menu_button_active" : "menu_button"
       }
     >
-      <img width="80%" height="80%" src={src} />
+      <img
+        width="80%"
+        height="80%"
+        src={src}
+        className={isRubber ? "eraser_icon" : ""}
+      />
     </button>
   );
 };

@@ -1,7 +1,18 @@
-import React, { useRef, useLayoutEffect, useState } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useState,
+  useEffect,
+} from "react";
+import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import Menu from "./Menu";
 import rough from "roughjs/bundled/rough.esm";
+import { v4 as uuid } from "uuid";
+
+import Menu from "./Menu";
+import { connectWithSocketServer } from "../socketConn/socketConn";
+import { emitCursorPosition } from "../socketConn/socketConn";
+
 import { actions, cursorPositions, toolTypes } from "../constants";
 import {
   createElement,
@@ -14,16 +25,17 @@ import {
   getResizedCoordinates,
   updatePencilElementWhenMoving,
 } from "./utils";
-import { v4 as uuid } from "uuid";
+
 import { updateElement as updateElementInStore } from "./whiteboardSlice";
-import { emitCursorPosition } from "../socketConn/socketConn";
 
 let emitCursor = true;
 let lastCursorPosition;
 
 const Whiteboard = () => {
-  const canvasRef = useRef();
-  const textAreaRef = useRef();
+  const { roomId } = useParams();
+
+  const canvasRef = useRef(null);
+  const textAreaRef = useRef(null);
 
   const toolType = useSelector((state) => state.whiteboard.tool);
   const elements = useSelector((state) => state.whiteboard.elements);
@@ -33,6 +45,31 @@ const Whiteboard = () => {
 
   const dispatch = useDispatch();
 
+  /* ================= SOCKET CONNECT ================= */
+  useEffect(() => {
+    if (roomId) {
+      connectWithSocketServer(roomId);
+    }
+  }, [roomId]);
+
+  /* ================= CANVAS RESIZE FIX ================= */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+    };
+  }, []);
+
+  /* ================= DRAW ELEMENTS ================= */
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -40,18 +77,16 @@ const Whiteboard = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const roughCanvas = rough.canvas(canvas);
-
     elements.forEach((element) => {
       drawElement({ roughCanvas, context: ctx, element });
     });
   }, [elements]);
 
+  /* ================= MOUSE DOWN ================= */
   const handleMouseDown = (event) => {
     const { clientX, clientY } = event;
 
-    if (selectedElement && action === actions.WRITING) {
-      return;
-    }
+    if (selectedElement && action === actions.WRITING) return;
 
     switch (toolType) {
       case toolTypes.RECTANGLE:
@@ -71,6 +106,7 @@ const Whiteboard = () => {
         dispatch(updateElementInStore(element));
         break;
       }
+
       case toolTypes.TEXT: {
         const element = createElement({
           x1: clientX,
@@ -86,6 +122,7 @@ const Whiteboard = () => {
         dispatch(updateElementInStore(element));
         break;
       }
+
       case toolTypes.SELECTION: {
         const element = getElementAtPosition(clientX, clientY, elements);
 
@@ -101,57 +138,31 @@ const Whiteboard = () => {
               : actions.RESIZING
           );
 
-          const offsetX = clientX - element.x1;
-          const offsetY = clientY - element.y1;
-
-          setSelectedElement({ ...element, offsetX, offsetY });
+          setSelectedElement({
+            ...element,
+            offsetX: clientX - element.x1,
+            offsetY: clientY - element.y1,
+          });
         }
 
         if (element && element.type === toolTypes.PENCIL) {
           setAction(actions.MOVING);
 
-          const xOffsets = element.points.map((point) => clientX - point.x);
-          const yOffsets = element.points.map((point) => clientY - point.y);
-
-          setSelectedElement({ ...element, xOffsets, yOffsets });
+          setSelectedElement({
+            ...element,
+            xOffsets: element.points.map((p) => clientX - p.x),
+            yOffsets: element.points.map((p) => clientY - p.y),
+          });
         }
         break;
       }
+
+      default:
+        break;
     }
   };
 
-  const handleMouseUp = () => {
-    const selectedElementIndex = elements.findIndex(
-      (el) => el.id === selectedElement?.id
-    );
-
-    if (selectedElementIndex !== -1) {
-      if (action === actions.DRAWING || action === actions.RESIZING) {
-        if (adjustmentRequired(elements[selectedElementIndex].type)) {
-          const { x1, y1, x2, y2 } = adjustElementCoordinates(
-            elements[selectedElementIndex]
-          );
-
-          updateElement(
-            {
-              id: selectedElement.id,
-              index: selectedElementIndex,
-              x1,
-              x2,
-              y1,
-              y2,
-              type: elements[selectedElementIndex].type,
-            },
-            elements
-          );
-        }
-      }
-    }
-
-    setAction(null);
-    setSelectedElement(null);
-  };
-
+  /* ================= MOUSE MOVE ================= */
   const handleMouseMove = (event) => {
     const { clientX, clientY } = event;
 
@@ -161,17 +172,16 @@ const Whiteboard = () => {
       emitCursorPosition({ x: clientX, y: clientY });
       emitCursor = false;
 
-      console.log("sending-position");
-
       setTimeout(() => {
         emitCursor = true;
         emitCursorPosition(lastCursorPosition);
-      }, [50]);
+      }, 50);
     }
 
     if (action === actions.DRAWING) {
-      // find index of selected element
-      const index = elements.findIndex((el) => el.id === selectedElement.id);
+      const index = elements.findIndex(
+        (el) => el.id === selectedElement.id
+      );
 
       if (index !== -1) {
         updateElement(
@@ -191,7 +201,6 @@ const Whiteboard = () => {
 
     if (toolType === toolTypes.SELECTION) {
       const element = getElementAtPosition(clientX, clientY, elements);
-
       event.target.style.cursor = element
         ? getCursorForPosition(element.position)
         : "default";
@@ -208,12 +217,13 @@ const Whiteboard = () => {
         y: clientY - selectedElement.yOffsets[index],
       }));
 
-      const index = elements.findIndex((el) => el.id === selectedElement.id);
+      const index = elements.findIndex(
+        (el) => el.id === selectedElement.id
+      );
 
       if (index !== -1) {
         updatePencilElementWhenMoving({ index, newPoints }, elements);
       }
-
       return;
     }
 
@@ -222,7 +232,7 @@ const Whiteboard = () => {
       action === actions.MOVING &&
       selectedElement
     ) {
-      const { id, x1, x2, y1, y2, type, offsetX, offsetY, text } =
+      const { id, x1, x2, y1, y2, offsetX, offsetY, type, text } =
         selectedElement;
 
       const width = x2 - x1;
@@ -231,7 +241,7 @@ const Whiteboard = () => {
       const newX1 = clientX - offsetX;
       const newY1 = clientY - offsetY;
 
-      const index = elements.findIndex((el) => el.id === selectedElement.id);
+      const index = elements.findIndex((el) => el.id === id);
 
       if (index !== -1) {
         updateElement(
@@ -255,55 +265,83 @@ const Whiteboard = () => {
       action === actions.RESIZING &&
       selectedElement
     ) {
-      const { id, type, position, ...coordinates } = selectedElement;
+      const { id, type, position, ...coords } = selectedElement;
       const { x1, y1, x2, y2 } = getResizedCoordinates(
         clientX,
         clientY,
         position,
-        coordinates
+        coords
       );
 
-      const selectedElementIndex = elements.findIndex(
-        (el) => el.id === selectedElement.id
-      );
+      const index = elements.findIndex((el) => el.id === id);
 
-      if (selectedElementIndex !== -1) {
+      if (index !== -1) {
         updateElement(
-          {
-            x1,
-            x2,
-            y1,
-            y2,
-            type: selectedElement.type,
-            id: selectedElement.id,
-            index: selectedElementIndex,
-          },
+          { id, type, x1, y1, x2, y2, index },
           elements
         );
       }
     }
   };
 
-  const handleTextareaBlur = (event) => {
-    const { id, x1, y1, type } = selectedElement;
+  /* ================= MOUSE UP ================= */
+  const handleMouseUp = () => {
+    const index = elements.findIndex(
+      (el) => el.id === selectedElement?.id
+    );
 
-    const index = elements.findIndex((el) => el.id === selectedElement.id);
+    if (index !== -1 && adjustmentRequired(elements[index].type)) {
+      const { x1, y1, x2, y2 } = adjustElementCoordinates(
+        elements[index]
+      );
+
+      updateElement(
+        {
+          id: selectedElement.id,
+          index,
+          x1,
+          y1,
+          x2,
+          y2,
+          type: elements[index].type,
+        },
+        elements
+      );
+    }
+
+    setAction(null);
+    setSelectedElement(null);
+  };
+
+  /* ================= TEXT BLUR ================= */
+  const handleTextareaBlur = (event) => {
+    const index = elements.findIndex(
+      (el) => el.id === selectedElement.id
+    );
 
     if (index !== -1) {
       updateElement(
-        { id, x1, y1, type, text: event.target.value, index },
+        {
+          id: selectedElement.id,
+          x1: selectedElement.x1,
+          y1: selectedElement.y1,
+          type: selectedElement.type,
+          text: event.target.value,
+          index,
+        },
         elements
       );
-
-      setAction(null);
-      setSelectedElement(null);
     }
+
+    setAction(null);
+    setSelectedElement(null);
   };
 
   return (
     <>
       <Menu />
-      {action === actions.WRITING ? (
+
+      {action === actions.WRITING && (
         <textarea
           ref={textAreaRef}
           onBlur={handleTextareaBlur}
@@ -316,21 +354,17 @@ const Whiteboard = () => {
             padding: 0,
             border: 0,
             outline: 0,
-            resize: "auto",
-            overflow: "hidden",
-            whiteSpace: "pre",
             background: "transparent",
           }}
         />
-      ) : null}
+      )}
+
       <canvas
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
         ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
         id="canvas"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       />
     </>
   );

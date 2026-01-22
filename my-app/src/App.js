@@ -1,18 +1,24 @@
-import React, { useEffect } from "react";
-import CursorOverlay from "./CursorOverlay/CursorOverlay";
-import { connectWithSocketServer } from "./socketConn/socketConn";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import Whiteboard from "./Whiteboard/Whiteboard";
+import CursorOverlay from "./CursorOverlay/CursorOverlay";
 
 function App() {
-  useEffect(() => {
-    connectWithSocketServer();
-  }, []);
-
   return (
-    <div>
-      <Whiteboard />
-      <CursorOverlay />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/room/:roomId"
+          element={
+            <>
+              <Whiteboard />
+              <CursorOverlay />
+            </>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

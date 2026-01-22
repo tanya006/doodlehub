@@ -6,10 +6,9 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 
 const server = http.createServer(app);
-
 app.use(cors());
 
-let elements = [];
+const rooms = {};
 
 const io = new Server(server, {
   cors: {
@@ -19,33 +18,58 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("user connected");
-  io.to(socket.id).emit("whiteboard-state", elements);
+  const roomId = socket.handshake.query.roomId;
+
+  if (!roomId) {
+    console.log("No roomId provided, disconnecting socket");
+    socket.disconnect();
+    return;
+  }
+
+  socket.join(roomId);
+
+  if (!rooms[roomId]) {
+    rooms[roomId] = [];
+  }
+
+  console.log("Socket connected:", socket.id, "Room:", roomId);
+
+  // send initial state
+  socket.emit("whiteboard-state", rooms[roomId]);
 
   socket.on("element-update", (elementData) => {
-    updateElementInElements(elementData);
+    const roomElements = rooms[roomId];
 
-    socket.broadcast.emit("element-update", elementData);
+    const index = roomElements.findIndex((el) => el.id === elementData.id);
+
+    if (index === -1) {
+      roomElements.push(elementData);
+    } else {
+      roomElements[index] = elementData;
+    }
+
+    socket.to(roomId).emit("element-update", elementData);
   });
 
   socket.on("whiteboard-clear", () => {
-    elements = [];
-
-    socket.broadcast.emit("whiteboard-clear");
+    rooms[roomId] = [];
+    socket.to(roomId).emit("whiteboard-clear");
   });
 
   socket.on("cursor-position", (cursorData) => {
-    socket.broadcast.emit("cursor-position", {
+    socket.to(roomId).emit("cursor-position", {
       ...cursorData,
       userId: socket.id,
     });
   });
 
   socket.on("disconnect", () => {
-    socket.broadcast.emit("user-disconnected", socket.id);
+    socket.to(roomId).emit("user-disconnected", socket.id);
+    console.log("Socket disconnected:", socket.id, "Room:", roomId);
   });
 });
 
+/* -------- SERVE REACT BUILD -------- */
 app.use(express.static(path.join(__dirname, "../my-app/build")));
 
 app.get("*", (req, res) => {
@@ -55,13 +79,5 @@ app.get("*", (req, res) => {
 const PORT = process.env.PORT || 3003;
 
 server.listen(PORT, () => {
-  console.log("server is running on port", PORT);
+  console.log("Server running on port", PORT);
 });
-
-const updateElementInElements = (elementData) => {
-  const index = elements.findIndex((element) => element.id === elementData.id);
-
-  if (index === -1) return elements.push(elementData);
-
-  elements[index] = elementData;
-};

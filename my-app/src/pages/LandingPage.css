@@ -1,0 +1,68 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.landing-container {
+  height: 100vh;
+  background: #FFF7CC;
+  overflow: hidden;
+  position: relative;
+}
+
+/* CENTER CARD */
+.landing-card {
+  position: relative;
+  z-index: 2;
+  background: #FFFBEB;
+  padding: 40px;
+  border-radius: 16px;
+  width: 600px;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  box-shadow: 0 0 20px rgba(166, 168, 126, 0.5);
+}
+
+.landing-card h1 {
+  font-family: cursive;
+  font-size: 70px;
+  margin-bottom: 0px;
+  color: #1F2937;
+}
+
+.landing-card p {
+  color: #4B5563;
+  font-size: 18px;
+  margin-bottom: 60px;
+  margin-top: -8px;
+}
+
+.landing-card input {
+  width: 76%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #3A3A3A;
+  margin-bottom: 15px;
+  font-size: 14px;
+  background: #FFFBEB;
+  color: #1F2937;
+}
+
+.landing-card button {
+  width: 80%;
+  padding: 12px;
+  margin-bottom: 60px;
+  background: #FFF7CC;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #1F2937;
+}
+
+.landing-card button:hover {
+  background: #ffec7f;
+  border: none;
+}

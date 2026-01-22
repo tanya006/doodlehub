@@ -8,15 +8,18 @@ import { setElements, updateElement } from "../Whiteboard/whiteboardSlice";
 
 let socket;
 
-export const connectWithSocketServer = () => {
+export const connectWithSocketServer = (roomId) => {
   const URL =
-  process.env.NODE_ENV === "production"
-    ? window.location.origin // for Render deployment
-    : "http://localhost:3003"; // for local testing
+    process.env.NODE_ENV === "production"
+      ? window.location.origin
+      : "http://localhost:3003";
 
-socket = io(URL, {
-  transports: ["websocket"],
-});
+  socket = io(URL, {
+    transports: ["websocket"],
+    query: {
+      roomId,
+    },
+  });
 
   socket.on("connect", () => {
     console.log("connected to socket.io server");
