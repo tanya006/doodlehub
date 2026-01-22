@@ -14,22 +14,11 @@ import { emitClearWhiteboard } from "../socketConn/socketConn";
 
 const IconButton = ({ src, type, isRubber }) => {
   const dispatch = useDispatch();
-
   const selectedToolType = useSelector((state) => state.whiteboard.tool);
-
-  const handleToolChange = () => {
-    dispatch(setToolType(type));
-  };
-
-  const handleClearCanvas = () => {
-    dispatch(setElements([]));
-
-    emitClearWhiteboard();
-  };
 
   return (
     <button
-      onClick={isRubber ? handleClearCanvas : handleToolChange}
+      onClick={() => dispatch(setToolType(type))} // ✅ FIX
       className={
         selectedToolType === type ? "menu_button_active" : "menu_button"
       }
@@ -38,7 +27,8 @@ const IconButton = ({ src, type, isRubber }) => {
         width="80%"
         height="80%"
         src={src}
-        className={isRubber ? "eraser_icon" : ""}
+        className={isRubber ? "eraser_icon" : ""} // ✅ KEPT AS-IS
+        alt=""
       />
     </button>
   );
@@ -51,11 +41,11 @@ const Menu = () => {
     <div className="menu_container">
       <IconButton src={rectangleIcon} type={toolTypes.RECTANGLE} />
       <IconButton src={lineIcon} type={toolTypes.LINE} />
-      <IconButton src={rubberIcon} isRubber />
+      <IconButton src={rubberIcon} type={toolTypes.ERASER} isRubber />{" "}
+      {/* ✅ */}
       <IconButton src={pencilIcon} type={toolTypes.PENCIL} />
       <IconButton src={textIcon} type={toolTypes.TEXT} />
       <IconButton src={selectionIcon} type={toolTypes.SELECTION} />
-
       {/* COLOR PICKER */}
       <div style={{ display: "flex", gap: "6px", marginLeft: "10px" }}>
         {["#000000", "#EF4444", "#22C55E", "#3B82F6", "#A855F7", "#F59E0B"].map(
@@ -75,8 +65,7 @@ const Menu = () => {
           ),
         )}
       </div>
-
-      {/* PEN SIZE */}
+      {/* PEN / ERASER SIZE */}
       <input
         type="range"
         min={1}
@@ -85,6 +74,17 @@ const Menu = () => {
         onChange={(e) => dispatch(setSize(+e.target.value))}
         style={{ marginLeft: "10px" }}
       />
+      {/* CLEAR BOARD */}
+      <button
+        onClick={() => {
+          dispatch(setElements([]));
+          emitClearWhiteboard();
+        }}
+        className="menu_button"
+        style={{ marginLeft: "10px", fontSize: "12px" }}
+      >
+        <h1>X</h1>
+      </button>
     </div>
   );
 };

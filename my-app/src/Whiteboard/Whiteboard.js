@@ -8,6 +8,7 @@ import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import rough from "roughjs/bundled/rough.esm";
 import { v4 as uuid } from "uuid";
+import { setElements } from "./whiteboardSlice";
 
 import Menu from "./Menu";
 import { connectWithSocketServer } from "../socketConn/socketConn";
@@ -90,6 +91,11 @@ const Whiteboard = () => {
     const { clientX, clientY } = event;
 
     if (selectedElement && action === actions.WRITING) return;
+
+    if (toolType === toolTypes.ERASER) {
+      setAction(actions.DRAWING);
+      return;
+    }
 
     switch (toolType) {
       case toolTypes.RECTANGLE:
@@ -174,6 +180,33 @@ const Whiteboard = () => {
     const { clientX, clientY } = event;
 
     lastCursorPosition = { x: clientX, y: clientY };
+
+    if (toolType === toolTypes.ERASER && action === actions.DRAWING) {
+      const newElements = elements
+        .map((el) => {
+          // ✏️ Pencil: remove points near cursor
+          if (el.type === toolTypes.PENCIL) {
+            const newPoints = el.points.filter(
+              (p) => Math.hypot(p.x - clientX, p.y - clientY) > size * 2,
+            );
+
+            if (newPoints.length === 0) return null;
+
+            return { ...el, points: newPoints };
+          }
+
+          // 🔲 Other shapes/text: delete if cursor touches
+          const hit = getElementAtPosition(clientX, clientY, [el]);
+          if (hit) return null;
+
+          return el;
+        })
+        .filter(Boolean);
+
+      dispatch(setElements(newElements));
+      return;
+    }
+
 
     if (emitCursor) {
       emitCursorPosition({ x: clientX, y: clientY });
