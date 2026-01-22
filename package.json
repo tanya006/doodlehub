@@ -2,7 +2,8 @@
   "name": "doodlehub",
   "private": true,
   "scripts": {
-    "start": "node server/index.js",
-    "build": "cd my-app && npm install && npm run build"
+    "install": "cd server && npm install",
+    "build": "cd my-app && npm install && npm run build",
+    "start": "node server/index.js"
   }
 }
