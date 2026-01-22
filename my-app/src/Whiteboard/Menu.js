@@ -39,15 +39,24 @@ const Menu = () => {
 
   return (
     <div className="menu_container">
-      <IconButton src={rectangleIcon} type={toolTypes.RECTANGLE} />
-      <IconButton src={lineIcon} type={toolTypes.LINE} />
-      <IconButton src={rubberIcon} type={toolTypes.ERASER} isRubber />{" "}
-      {/* ✅ */}
-      <IconButton src={pencilIcon} type={toolTypes.PENCIL} />
-      <IconButton src={textIcon} type={toolTypes.TEXT} />
-      <IconButton src={selectionIcon} type={toolTypes.SELECTION} />
+      <div style={{ display: "flex", gap: "20px", marginRight: "-30px", marginLeft: "-20px" }}>
+        <IconButton src={rectangleIcon} type={toolTypes.RECTANGLE} />
+        <IconButton src={lineIcon} type={toolTypes.LINE} />
+        <IconButton src={rubberIcon} type={toolTypes.ERASER} isRubber />{" "}
+        <IconButton src={pencilIcon} type={toolTypes.PENCIL} />
+        <IconButton src={textIcon} type={toolTypes.TEXT} />
+        <IconButton src={selectionIcon} type={toolTypes.SELECTION} />
+      </div>
+      <div
+        style={{
+          width: "1.5px",
+          height: "40px",
+          background: "#3A3A3A",
+          opacity: 1,
+        }}
+      />
       {/* COLOR PICKER */}
-      <div style={{ display: "flex", gap: "6px", marginLeft: "10px" }}>
+      <div style={{ display: "flex", gap: "6px", marginLeft: "-25px", marginRight: "-30px"}}>
         {["#000000", "#EF4444", "#22C55E", "#3B82F6", "#A855F7", "#F59E0B"].map(
           (c) => (
             <button
@@ -72,7 +81,15 @@ const Menu = () => {
         max={8}
         defaultValue={2}
         onChange={(e) => dispatch(setSize(+e.target.value))}
-        style={{ marginLeft: "10px" }}
+        style={{ marginRight: "-25px" }}
+      />
+      <div
+        style={{
+          width: "1.5px",
+          height: "40px",
+          background: "#3A3A3A",
+          opacity: 1.0,
+        }}
       />
       {/* CLEAR BOARD */}
       <button
@@ -81,9 +98,9 @@ const Menu = () => {
           emitClearWhiteboard();
         }}
         className="menu_button"
-        style={{ marginLeft: "10px", fontSize: "12px" }}
+        style={{ width: "70px", marginLeft: "-40px", fontSize: "15px", fontWeight: "510", marginRight: "-20px" }}
       >
-        <h1>X</h1>
+        RESET
       </button>
     </div>
   );
